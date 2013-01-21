@@ -1,12 +1,12 @@
 
-#include "httprequest.h"
+#include "transport/httprequest.h"
 #include "transport/logging.h"
 
 #if WIN32
 #define snprintf sprintf_s
 #endif
 
-DEFINE_LOGGER(logger, "HTTPFetch");
+DEFINE_LOGGER(logger, "HTTPRequest");
 
 namespace Transport {
 
@@ -65,14 +65,17 @@ namespace Transport {
 		return 1;
 	}
 
-	HTTPRequest::HTTPRequest(Swift::BoostIOServiceThread *ioService, Swift::ConnectionFactory *factory) : m_ioService(ioService), m_factory(factory) {
+	HTTPRequest::HTTPRequest(Swift::NetworkFactories *factories) : m_factories(factories) {
 		m_afterHeader = false;
 	}
 
 	HTTPRequest::~HTTPRequest() {
 	}
 
-	void HTTPRequest::_fetchCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, bool error) {
+	void HTTPRequest::_fetchCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, boost::shared_ptr<Swift::Error> error) {
+		LOG4CXX_INFO(logger, "_fetchCallback " << conn->getLocalAddress().getAddress().getRawAddress().to_string());
+		conn->onDisconnected.connect(boost::bind(&HTTPRequest::_disconnected, this, conn));
+		conn->onDataRead.connect(boost::bind(&HTTPRequest::_read, this, conn, _1));				
 		if (error) {
 			_disconnected(conn);
 		}
@@ -112,6 +115,7 @@ namespace Transport {
 	}
 
 	void HTTPRequest::_read(boost::shared_ptr<Swift::Connection> conn, boost::shared_ptr<Swift::SafeByteArray> data) {
+		LOG4CXX_INFO(logger, "_read ");
 		std::string d(data->begin(), data->end());
 		// 			std::cout << d << "\n";
 		std::string img = d.substr(d.find("\r\n\r\n") + 4);
@@ -146,25 +150,19 @@ namespace Transport {
 		}
 
 		LOG4CXX_INFO(logger, "Connecting to " << host << ":" << port);
-
-		boost::asio::ip::tcp::resolver resolver(*m_ioService->getIOService());
-		boost::asio::ip::tcp::resolver::query query(host, "");
-		boost::asio::ip::address address;
-		for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query); i != boost::asio::ip::tcp::resolver::iterator(); ++i) {
-			boost::asio::ip::tcp::endpoint end = *i;
-			address = end.address();
-			break;
-		}
-
-		boost::shared_ptr<Swift::Connection> conn = m_factory->createConnection();
-		conn->onConnectFinished.connect(boost::bind(&HTTPRequest::_fetchCallback, this, conn, url, _1));
-		conn->onDisconnected.connect(boost::bind(&HTTPRequest::_disconnected, this, conn));
-		conn->onDataRead.connect(boost::bind(&HTTPRequest::_read, this, conn, _1));
-		conn->connect(Swift::HostAddressPort(Swift::HostAddress(address), port));
+		
+		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, m_factories->getDomainNameResolver(), 
+			m_factories->getConnectionFactory(), m_factories->getTimerFactory());
+		connector->onConnectFinished.connect(boost::bind(&HTTPRequest::_fetchCallback, this, _1, url, _2));	
+		connector->setTimeoutMilliseconds(60*1000);
+		connector->start();
 		return true;
 	}
 
 	void HTTPRequest::_postCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, const std::string contentType, std::string data, bool error) {
+		LOG4CXX_INFO(logger, "_postCallback ");
+		conn->onDisconnected.connect(boost::bind(&HTTPRequest::_disconnected, this, conn));
+		conn->onDataRead.connect(boost::bind(&HTTPRequest::_read, this, conn, _1));		
 		if (error) {
 			_disconnected(conn);
 		}
@@ -203,20 +201,12 @@ namespace Transport {
 
 		LOG4CXX_INFO(logger, "Connecting to " << host << ":" << port);
 
-		boost::asio::ip::tcp::resolver resolver(*m_ioService->getIOService());
-		boost::asio::ip::tcp::resolver::query query(host, "");
-		boost::asio::ip::address address;
-		for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query); i != boost::asio::ip::tcp::resolver::iterator(); ++i) {
-			boost::asio::ip::tcp::endpoint end = *i;
-			address = end.address();
-			break;
-		}
 
-		boost::shared_ptr<Swift::Connection> conn = m_factory->createConnection();
-		conn->onConnectFinished.connect(boost::bind(&HTTPRequest::_postCallback, this, conn, url, contentType, data, _1));
-		conn->onDisconnected.connect(boost::bind(&HTTPRequest::_disconnected, this, conn));
-		conn->onDataRead.connect(boost::bind(&HTTPRequest::_read, this, conn, _1));
-		conn->connect(Swift::HostAddressPort(Swift::HostAddress(address), port));
+		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, m_factories->getDomainNameResolver(), 
+			m_factories->getConnectionFactory(), m_factories->getTimerFactory());
+		connector->onConnectFinished.connect(boost::bind(&HTTPRequest::_postCallback, this, _1, url, contentType, data, false));	
+		connector->start();
 		return true;
 	}
+	
 }

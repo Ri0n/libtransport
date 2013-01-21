@@ -8,6 +8,7 @@
 // Swiften
 #include "Swiften/Swiften.h"
 #include "Swiften/TLS/OpenSSL/OpenSSLContextFactory.h"
+#include "Swiften/Network/Connector.h"
 
 // Boost
 #include <boost/algorithm/string.hpp>
@@ -19,7 +20,7 @@ namespace  Transport {
 
 	class HTTPRequest {
 	public:
-		HTTPRequest(Swift::BoostIOServiceThread *ioSerice, Swift::ConnectionFactory *factory);
+		HTTPRequest(Swift::NetworkFactories *factory);
 		virtual ~HTTPRequest();
 
 		bool fetchURL(const std::string &url);
@@ -28,13 +29,12 @@ namespace  Transport {
 		boost::signal<void (const std::string &data)> onResponseReceived;		
 
 	private:
-		void _fetchCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, bool error);
+		void _fetchCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, boost::shared_ptr<Swift::Error> error);
 		void _disconnected(boost::shared_ptr<Swift::Connection> conn);
 		void _read(boost::shared_ptr<Swift::Connection> conn, boost::shared_ptr<Swift::SafeByteArray> data);
 		void _postCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, const std::string contentType, const std::string data, bool error);
 		
-		Swift::BoostIOServiceThread *m_ioService;
-		Swift::ConnectionFactory *m_factory;
+		Swift::NetworkFactories *m_factories;
 		std::string m_buffer;
 		bool m_afterHeader;
 	};
