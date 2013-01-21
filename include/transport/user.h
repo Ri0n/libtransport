@@ -161,6 +161,8 @@ class User : public Swift::EntityCapsProvider {
 		std::list<Swift::Presence::ref> m_joinedRooms;
 		std::map<std::string, std::string> m_settings;
 		bool m_cacheMessages;
+		bool m_enableNotifications;
+		std::string m_notificationsUrl;
 };
 
 }

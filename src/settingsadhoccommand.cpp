@@ -50,6 +50,11 @@ SettingsAdHocCommand::SettingsAdHocCommand(Component *component, UserManager *us
 	field->setName("stay_connected");
 	field->setLabel("Stay connected to legacy network when offline on XMPP");
 	addFormField(field);
+
+	field = Swift::BooleanFormField::create(CONFIG_STRING_DEFAULTED(component->getConfig(), "settings.enable_notifications", "0") == "1");
+	field->setName("enable_notifications");
+	field->setLabel("Enable Push Notifications");
+	addFormField(field);
 }
 
 SettingsAdHocCommand::~SettingsAdHocCommand() {

@@ -177,6 +177,10 @@ void Conversation::handleMessage(boost::shared_ptr<Swift::Message> &message, con
 			}
 		}
 	}
+	if (m_conversationManager->getUser()->getUserSetting("enable_notifications") == "1"
+		&& m_conversationManager->getUser()->shouldCacheMessages()) {
+			std::cout << "Should send notification!" << std::endl;
+	}
 }
 
 void Conversation::sendParticipants(const Swift::JID &to) {
