@@ -20,7 +20,7 @@ namespace  Transport {
 
 	class HTTPRequest {
 	public:
-		HTTPRequest(Swift::NetworkFactories *factory);
+		HTTPRequest(Swift::DomainNameResolver *resolver, Swift::ConnectionFactory *connectionFactory, Swift::TimerFactory *timerFactory);
 		virtual ~HTTPRequest();
 
 		bool fetchURL(const std::string &url);
@@ -34,7 +34,9 @@ namespace  Transport {
 		void _read(boost::shared_ptr<Swift::Connection> conn, boost::shared_ptr<Swift::SafeByteArray> data);
 		void _postCallback(boost::shared_ptr<Swift::Connection> conn, const std::string url, const std::string contentType, const std::string data, bool error);
 		
-		Swift::NetworkFactories *m_factories;
+		Swift::DomainNameResolver *resolver;
+		Swift::ConnectionFactory *connectionFactory;
+		Swift::TimerFactory *timerFactory;
 		std::string m_buffer;
 		bool m_afterHeader;
 	};

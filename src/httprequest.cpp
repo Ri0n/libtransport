@@ -65,7 +65,8 @@ namespace Transport {
 		return 1;
 	}
 
-	HTTPRequest::HTTPRequest(Swift::NetworkFactories *factories) : m_factories(factories) {
+	HTTPRequest::HTTPRequest(Swift::DomainNameResolver *resolver, Swift::ConnectionFactory *connectionFactory, Swift::TimerFactory *timerFactory) 
+		: resolver(resolver), connectionFactory(connectionFactory), timerFactory(timerFactory) {
 		m_afterHeader = false;
 	}
 
@@ -151,8 +152,8 @@ namespace Transport {
 
 		LOG4CXX_INFO(logger, "Connecting to " << host << ":" << port);
 		
-		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, m_factories->getDomainNameResolver(), 
-			m_factories->getConnectionFactory(), m_factories->getTimerFactory());
+		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, resolver, 
+			connectionFactory, timerFactory);
 		connector->onConnectFinished.connect(boost::bind(&HTTPRequest::_fetchCallback, this, _1, url, _2));	
 		connector->setTimeoutMilliseconds(60*1000);
 		connector->start();
@@ -202,8 +203,8 @@ namespace Transport {
 		LOG4CXX_INFO(logger, "Connecting to " << host << ":" << port);
 
 
-		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, m_factories->getDomainNameResolver(), 
-			m_factories->getConnectionFactory(), m_factories->getTimerFactory());
+		Swift::Connector::ref connector = Swift::Connector::create(host, port, false, resolver, 
+			connectionFactory, timerFactory);
 		connector->onConnectFinished.connect(boost::bind(&HTTPRequest::_postCallback, this, _1, url, contentType, data, false));	
 		connector->start();
 		return true;
