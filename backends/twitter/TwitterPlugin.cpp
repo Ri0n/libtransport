@@ -727,8 +727,8 @@ void TwitterPlugin::directMessageResponse(std::string &user, std::string &userna
 			handleMessage(user, userdb[user].twitterMode == CHATROOM ? adminChatRoom : adminLegacyName,
 						  std::string("Error while sending direct message! - ") + errMsg.getMessage(), userdb[user].twitterMode == CHATROOM ? adminNickName : "");
 		else
-			handleMessage(user, userdb[user].twitterMode == CHATROOM ? adminChatRoom : adminLegacyName,
-						  std::string("Error while fetching direct messages! - ") + errMsg.getMessage(), userdb[user].twitterMode == CHATROOM ? adminNickName : "");
+			//handleMessage(user, userdb[user].twitterMode == CHATROOM ? adminChatRoom : adminLegacyName,
+			//			  std::string("Error while fetching direct messages! - ") + errMsg.getMessage(), userdb[user].twitterMode == CHATROOM ? adminNickName : "");
 		return;
 	}
 
