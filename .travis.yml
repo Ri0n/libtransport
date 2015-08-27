@@ -1,8 +1,9 @@
 language: cpp
 sudo: false
-before_install:
-          - sudo apt-get update -qq
-          - sudo apt-get install -y libswiften-dev libprotobuf-dev protobuf-compiler pidgin-dev
+addons:
+        apt:
+          packages:
+          - libswiften-dev libprotobuf-dev protobuf-compiler pidgin-dev
 script:
           - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make
 
