@@ -4,7 +4,7 @@ before_script:
           - curl -k https://swift.im/keys/packages.key | sudo apt-key add -
           - echo "deb http://swift.im/packages/ubuntu/precise release main" | sudo tee -a /etc/apt/sources.list
           - sudo apt-get update -qq
-          - sudo apt-get install -y --force-yes libswiften-dev libprotobuf-dev protobuf-compiler pidgin-dev
+          - sudo apt-get install -y --force-yes libswiften-dev libprotobuf-dev protobuf-compiler pidgin-dev liblog4cxx10-dev
 script:
           - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug .. && make
 
