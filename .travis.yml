@@ -1,5 +1,5 @@
 language: cpp
-sudo: false
+sudo: required
 before_install:
           - sudo apt-get update -qq
           - sudo apt-get install -y libswiften-dev libprotobuf-dev protobuf-compiler pidgin-dev
